@@ -103,9 +103,7 @@ class Privatecloud extends utils.Adapter {
                     });
             
                     req.on('end', function () {
-                        const request = {}; // object from alisa service or empty object
-                        request.alexa = body;
-                        that.sendTo('iot.0', 'private', {type: 'alexa', request: request}, response => {
+                        that.sendTo('iot.0', 'private', {type: 'alexa', request: body}, response => {
                             // Send this response back to alisa service
                             that.log.info(JSON.stringify(response));
         
