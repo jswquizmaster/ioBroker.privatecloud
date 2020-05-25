@@ -37,19 +37,19 @@ class Privatecloud extends utils.Adapter {
         // The adapters config (in the instance object everything under the attribute "native") is accessible via
         // this.config:
         this.log.info('config option1: ' + this.config.option1);
-        this.log.info('config option2: ' + this.config.option2);
+        this.log.info('config local port: ' + this.config.localPort);
 
         /*
         For every state in the system there has to be also an object of type state
         Here a simple template for a boolean variable named "testVariable"
         Because every adapter instance uses its own unique namespace variable names can't collide with other adapters variables
         */
-        await this.setObjectAsync('testVariable', {
+        await this.setObjectAsync('connection', {
             type: 'state',
             common: {
-                name: 'testVariable',
+                name: 'If connected to private cloud',
                 type: 'boolean',
-                role: 'indicator',
+                role: 'indicator.connected',
                 read: true,
                 write: true,
             },

@@ -26,9 +26,9 @@ systemDictionary = {
         'pl': 'opcja 1',
         'zh-cn': '选项1'
     },
-    'option2': {
-        'en': 'option2',
-        'de': 'Option 2',
+    'localPort': {
+        'en': 'local port',
+        'de': 'lokaler Port',
         'ru': 'option2',
         'pt': 'opção 2',
         'nl': 'Optie 2',
