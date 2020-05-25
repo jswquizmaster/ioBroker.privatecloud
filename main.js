@@ -23,11 +23,42 @@ class Privatecloud extends utils.Adapter {
             ...options,
             name: 'privatecloud',
         });
+        this.serverListening = false;
+        this.webserver = null;
+        this.serverport = 3000;
         this.on('ready', this.onReady.bind(this));
         this.on('objectChange', this.onObjectChange.bind(this));
         this.on('stateChange', this.onStateChange.bind(this));
         // this.on('message', this.onMessage.bind(this));
         this.on('unload', this.onUnload.bind(this));
+    }
+
+    requestProcessor(req, res) {
+        if (req.method == 'POST') {
+            const that = this;
+            let body = '';
+    
+            req.on('data', function (data) {
+                body += data;
+    
+                // Too much POST data, kill the connection!
+                // 1e6 === 1 * Math.pow(10, 6) === 1 * 1000000 ~~~ 1MB
+                if (body.length > 1e6)
+                    req.connection.destroy();
+            });
+    
+            req.on('end', function () {
+                const request = JSON.parse(body);
+                that.log.info(request);
+    
+                const response = request;
+                
+    
+                res.writeHead(200, {'Content-Type': 'application/json'});
+                res.write(JSON.stringify(response)); //write a response to the client
+                res.end(); //end the response
+            });
+        }    
     }
 
     /**
@@ -40,6 +71,8 @@ class Privatecloud extends utils.Adapter {
         // this.config:
         this.log.info('config option1: ' + this.config.option1);
         this.log.info('config local port: ' + this.config.localPort);
+
+        this.serverport = parseInt(this.config.localPort, 10);
 
         /*
         For every state in the system there has to be also an object of type state
@@ -66,7 +99,7 @@ class Privatecloud extends utils.Adapter {
         you will notice that each setState will cause the stateChange event to fire (because of above subscribeStates cmd)
         */
         // the variable testVariable is set to true as command (ack=false)
-        await this.setStateAsync('connection', true);
+        await this.setStateAsync('connection', this.serverListening);
 
         // same thing, but the value is flagged "ack"
         // ack should be always set to true if the value is received from or acknowledged from the target system
@@ -81,8 +114,31 @@ class Privatecloud extends utils.Adapter {
 
         //result = await this.checkGroupAsync('admin', 'admin');
         //this.log.info('check group user admin group admin: ' + result);
-        const that = this;
+        //const that = this;
+
+        try {
+            this.webserver = http.createServer(this.requestProcessor);
+        } catch (err) {
+            this.log.error(`Cannot create webserver: ${err}`);
+            this.terminate ? this.terminate(utils.EXIT_CODES.ADAPTER_REQUESTED_TERMINATION) : process.exit(utils.EXIT_CODES.ADAPTER_REQUESTED_TERMINATION);
+            return;
+        }
+
+        this.webserver.on('error', e => {
+            this.log.error(`Cannot start server on '0.0.0.0'}:${this.serverport}: ${e}`);
+            
+            if (!this.serverListening) {
+                this.terminate ? this.terminate(utils.EXIT_CODES.ADAPTER_REQUESTED_TERMINATION) : process.exit(utils.EXIT_CODES.ADAPTER_REQUESTED_TERMINATION);
+            }
+        });
+
+        this.webserver.listen(this.serverport, () => {
+            this.serverListening = true;
+        });
+
+
      
+        /*
         http.createServer(function (req, res) {
             if (req.method == 'POST') {
                 let body = '';
@@ -109,7 +165,7 @@ class Privatecloud extends utils.Adapter {
                 });
             }    
         }).listen(3000); //the server object listens on port 3000
-        
+        */
 
 
     }
