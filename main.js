@@ -35,7 +35,6 @@ class Privatecloud extends utils.Adapter {
 
     requestProcessor(req, res) {
         if (req.method == 'POST') {
-            const that = this;
             let body = '';
     
             req.on('data', function (data) {
@@ -49,7 +48,6 @@ class Privatecloud extends utils.Adapter {
     
             req.on('end', function () {
                 const request = JSON.parse(body);
-                that.log.info(request);
     
                 const response = request;
                 
