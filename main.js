@@ -10,6 +10,8 @@ const utils = require('@iobroker/adapter-core');
 
 // Load your modules here, e.g.:
 // const fs = require("fs");
+const http = require('http');
+
 
 class Privatecloud extends utils.Adapter {
 
@@ -64,21 +66,52 @@ class Privatecloud extends utils.Adapter {
         you will notice that each setState will cause the stateChange event to fire (because of above subscribeStates cmd)
         */
         // the variable testVariable is set to true as command (ack=false)
-        await this.setStateAsync('testVariable', true);
+        await this.setStateAsync('connection', true);
 
         // same thing, but the value is flagged "ack"
         // ack should be always set to true if the value is received from or acknowledged from the target system
-        await this.setStateAsync('testVariable', { val: true, ack: true });
+        //await this.setStateAsync('connection', { val: true, ack: true });
 
         // same thing, but the state is deleted after 30s (getState will return null afterwards)
-        await this.setStateAsync('testVariable', { val: true, ack: true, expire: 30 });
+        //await this.setStateAsync('connection', { val: true, ack: true, expire: 30 });
 
         // examples for the checkPassword/checkGroup functions
-        let result = await this.checkPasswordAsync('admin', 'iobroker');
-        this.log.info('check user admin pw iobroker: ' + result);
+        //let result = await this.checkPasswordAsync('admin', 'iobroker');
+        //this.log.info('check user admin pw iobroker: ' + result);
 
-        result = await this.checkGroupAsync('admin', 'admin');
-        this.log.info('check group user admin group admin: ' + result);
+        //result = await this.checkGroupAsync('admin', 'admin');
+        //this.log.info('check group user admin group admin: ' + result);
+        const that = this;
+     
+        http.createServer(function (req, res) {
+            if (req.method == 'POST') {
+                let body = '';
+        
+                req.on('data', function (data) {
+                    body += data;
+        
+                    // Too much POST data, kill the connection!
+                    // 1e6 === 1 * Math.pow(10, 6) === 1 * 1000000 ~~~ 1MB
+                    if (body.length > 1e6)
+                        req.connection.destroy();
+                });
+        
+                req.on('end', function () {
+                    const request = JSON.parse(body);
+                    that.log.info(request);
+        
+                    const response = request;
+                    
+        
+                    res.writeHead(200, {'Content-Type': 'application/json'});
+                    res.write(JSON.stringify(response)); //write a response to the client
+                    res.end(); //end the response
+                });
+            }    
+        }).listen(3000); //the server object listens on port 3000
+        
+
+
     }
 
     /**
@@ -118,6 +151,8 @@ class Privatecloud extends utils.Adapter {
         if (state) {
             // The state was changed
             this.log.info(`state ${id} changed: ${state.val} (ack = ${state.ack})`);
+
+
         } else {
             // The state was deleted
             this.log.info(`state ${id} deleted`);
