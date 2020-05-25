@@ -33,32 +33,6 @@ class Privatecloud extends utils.Adapter {
         this.on('unload', this.onUnload.bind(this));
     }
 
-    requestProcessor(req, res) {
-        if (req.method == 'POST') {
-            let body = '';
-    
-            req.on('data', function (data) {
-                body += data;
-    
-                // Too much POST data, kill the connection!
-                // 1e6 === 1 * Math.pow(10, 6) === 1 * 1000000 ~~~ 1MB
-                if (body.length > 1e6)
-                    req.connection.destroy();
-            });
-    
-            req.on('end', function () {
-                const request = JSON.parse(body);
-    
-                const response = request;
-                
-    
-                res.writeHead(200, {'Content-Type': 'application/json'});
-                res.write(JSON.stringify(response)); //write a response to the client
-                res.end(); //end the response
-            });
-        }    
-    }
-
     /**
      * Is called when databases are connected and adapter received configuration.
      */
@@ -112,10 +86,40 @@ class Privatecloud extends utils.Adapter {
 
         //result = await this.checkGroupAsync('admin', 'admin');
         //this.log.info('check group user admin group admin: ' + result);
-        //const that = this;
+        const that = this;
 
         try {
-            this.webserver = http.createServer(this.requestProcessor);
+            this.webserver = http.createServer(function (req, res) {
+                if (req.method == 'POST') {
+                    let body = '';
+            
+                    req.on('data', function (data) {
+                        body += data;
+            
+                        // Too much POST data, kill the connection!
+                        // 1e6 === 1 * Math.pow(10, 6) === 1 * 1000000 ~~~ 1MB
+                        if (body.length > 1e6)
+                            req.connection.destroy();
+                    });
+            
+                    req.on('end', function () {
+                        const request = {}; // object from alisa service or empty object
+                        request.alexa = body;
+                        that.sendTo('iot.0', 'private', {type: 'alexa', request: request}, response => {
+                            // Send this response back to alisa service
+                            that.log.info(JSON.stringify(response));
+        
+                            res.writeHead(200, {'Content-Type': 'application/json'});
+                            res.write(JSON.stringify(response)); //write a response to the client
+                            res.end(); //end the response
+                        });
+                    });
+                }    
+                
+                
+                
+                
+            });
         } catch (err) {
             this.log.error(`Cannot create webserver: ${err}`);
             this.terminate ? this.terminate(utils.EXIT_CODES.ADAPTER_REQUESTED_TERMINATION) : process.exit(utils.EXIT_CODES.ADAPTER_REQUESTED_TERMINATION);
@@ -133,37 +137,6 @@ class Privatecloud extends utils.Adapter {
         this.webserver.listen(this.serverport, () => {
             this.serverListening = true;
         });
-
-
-     
-        /*
-        http.createServer(function (req, res) {
-            if (req.method == 'POST') {
-                let body = '';
-        
-                req.on('data', function (data) {
-                    body += data;
-        
-                    // Too much POST data, kill the connection!
-                    // 1e6 === 1 * Math.pow(10, 6) === 1 * 1000000 ~~~ 1MB
-                    if (body.length > 1e6)
-                        req.connection.destroy();
-                });
-        
-                req.on('end', function () {
-                    const request = JSON.parse(body);
-                    that.log.info(request);
-        
-                    const response = request;
-                    
-        
-                    res.writeHead(200, {'Content-Type': 'application/json'});
-                    res.write(JSON.stringify(response)); //write a response to the client
-                    res.end(); //end the response
-                });
-            }    
-        }).listen(3000); //the server object listens on port 3000
-        */
 
 
     }
