@@ -1,0 +1,79 @@
+{
+    "common": {
+        "name": "privatecloud",
+        "version": "0.0.1",
+        "news": {
+            "0.0.1": {
+                "en": "initial release",
+                "de": "Erstveröffentlichung",
+                "ru": "Начальная версия",
+                "pt": "lançamento inicial",
+                "nl": "Eerste uitgave",
+                "fr": "Première version",
+                "it": "Versione iniziale",
+                "es": "Versión inicial",
+                "pl": "Pierwsze wydanie",
+                "zh-cn": "首次出版"
+            }
+        },
+        "title": "Private Cloud",
+        "titleLang": {
+            "en": "Private Cloud",
+            "de": "Private Wolke",
+            "ru": "Частное Облако",
+            "pt": "Nuvem Privada",
+            "nl": "Private Cloud",
+            "fr": "Nuage privé",
+            "it": "Cloud privato",
+            "es": "Nube privada",
+            "pl": "Prywatna chmura",
+            "zh-cn": "私有云"
+        },
+        "desc": {
+            "en": "privatecloud",
+            "de": "private Wolke",
+            "ru": "privatecloud",
+            "pt": "privatecloud",
+            "nl": "privatecloud",
+            "fr": "nuage privé",
+            "it": "privateCloud",
+            "es": "nube privada",
+            "pl": "prywatna chmura",
+            "zh-cn": "私有云"
+        },
+        "authors": [
+            "jswquizmaster <iobroker@schu-wue.de>"
+        ],
+        "keywords": [
+            "ioBroker",
+            "template",
+            "Smart Home",
+            "home automation"
+        ],
+        "license": "MIT",
+        "platform": "Javascript/Node.js",
+        "main": "main.js",
+        "icon": "privatecloud.png",
+        "enabled": true,
+        "extIcon": "https://raw.githubusercontent.com/jswquizmaster/ioBroker.privatecloud/master/admin/privatecloud.png",
+        "readme": "https://github.com/jswquizmaster/ioBroker.privatecloud/blob/master/README.md",
+        "loglevel": "info",
+        "mode": "daemon",
+        "type": "iot-systems",
+        "compact": true,
+        "connectionType": "cloud",
+        "dataSource": "push",
+        "materialize": true,
+        "dependencies": [
+            {
+                "js-controller": ">=1.4.2"
+            }
+        ]
+    },
+    "native": {
+        "option1": true,
+        "option2": "42"
+    },
+    "objects": [],
+    "instanceObjects": []
+}
