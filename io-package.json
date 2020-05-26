@@ -19,7 +19,7 @@
         "title": "Private Cloud",
         "titleLang": {
             "en": "Private Cloud",
-            "de": "Private Wolke",
+            "de": "Private Cloud",
             "ru": "Частное Облако",
             "pt": "Nuvem Privada",
             "nl": "Private Cloud",
@@ -31,7 +31,7 @@
         },
         "desc": {
             "en": "privatecloud",
-            "de": "private Wolke",
+            "de": "private Cloud Anbindung",
             "ru": "privatecloud",
             "pt": "privatecloud",
             "nl": "privatecloud",
@@ -46,9 +46,11 @@
         ],
         "keywords": [
             "ioBroker",
-            "template",
             "Smart Home",
-            "home automation"
+            "home automation",
+            "alexa",
+            "private",
+            "cloud"
         ],
         "license": "MIT",
         "platform": "Javascript/Node.js",
@@ -71,7 +73,6 @@
         ]
     },
     "native": {
-        "option1": true,
         "localPort": "3000"
     },
     "objects": [],
