@@ -1,7 +1,7 @@
 {
     "common": {
         "name": "privatecloud",
-        "version": "0.0.1",
+        "version": "0.1.0",
         "news": {
             "0.0.1": {
                 "en": "initial release",
@@ -73,7 +73,10 @@
         ]
     },
     "native": {
-        "localPort": "3000"
+        "serverAddress": "192.168.1.100",
+        "forwardPort": "3000",
+        "userName": "alexa",
+        "privateKey": ""
     },
     "objects": [],
     "instanceObjects": []

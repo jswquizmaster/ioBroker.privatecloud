@@ -76,8 +76,21 @@
         <!-- For example columns with settings: -->
         <div class="row">
             <div class="col s6 input-field">
-                <input type="text" class="value" id="localPort" />
-                <label for="localPort" class="translate">localPort</label>
+                <input type="text" class="value" id="serverAddress" />
+                <label for="serverAddress" class="translate">serverAddress</label>
+            </div>  
+            <div class="col s6 input-field">
+                <input type="text" class="value" id="forwardPort" />
+                <label for="forwardPort" class="translate">forwardPort</label>
+            </div>
+            <div class="col s6 input-field"></div>
+                <input type="text" class="value" id="userName" />
+                <label for="userName" class="translate">userName</label>
+            </div>
+            <div class="col s6 input-field"></div>
+                <i class="material-icons prefix">mode_edit</i>
+                <textarea id="privateKey" class="value materialize-textarea"></textarea>    
+                <label for="privateKey">privateKey</label>
             </div>
         </div>
 

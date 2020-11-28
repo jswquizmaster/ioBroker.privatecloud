@@ -10,7 +10,7 @@ const utils = require('@iobroker/adapter-core');
 
 // Load your modules here, e.g.:
 // const fs = require("fs");
-const http = require('http');
+var Client = require('ssh2').Client;
 
 
 class Privatecloud extends utils.Adapter {
@@ -24,7 +24,7 @@ class Privatecloud extends utils.Adapter {
             name: 'privatecloud',
         });
         this.serverListening = false;
-        this.webserver = null;
+        this.connection = new Client();
         this.serverport = 3000;
         this.on('ready', this.onReady.bind(this));
         this.on('unload', this.onUnload.bind(this));
@@ -35,8 +35,23 @@ class Privatecloud extends utils.Adapter {
      */
     async onReady() {
         const adapter = this;
-        this.log.info('config local port: ' + this.config.localPort);
-        this.serverport = parseInt(this.config.localPort, 10);
+        const conn = this.connection;
+
+        function connectToProxy() {
+            const servername = adapter.config.serverAddress;
+            const serverport = 22;
+            const username = adapter.config.userName;
+            const privatekey = adapter.config.privateKey;
+
+            adapter.log.info(`Connecting to ${servername}:${serverport}`);
+            adapter.connection.connect({
+                host: servername,
+                port: serverport,
+                username: username,
+                keepaliveInterval: 90*1000,
+                privateKey: privatekey
+            });
+        }
 
         /*
         await this.setObjectAsync('connection', {
@@ -55,49 +70,69 @@ class Privatecloud extends utils.Adapter {
         */
 
         try {
-            this.webserver = http.createServer(function (req, res) {
-                if (req.method == 'POST') {
-                    let body = '';
-            
-                    req.on('data', function (data) {
-                        body += data;
-            
-                        // Too much POST data, kill the connection!
-                        // 1e4 === 1 * Math.pow(10, 4) === 1 * 10000 ~~~ 10KB
-                        if (body.length > 1e4)
-                            req.connection.destroy();
-                    });
-            
-                    req.on('end', function () {
-                        adapter.log.debug(body);
-                        adapter.sendTo('iot.0', 'private', {type: 'alexa', request: body}, response => {
-                            // Send this response back to alexa service
-                            adapter.log.debug(JSON.stringify(response));
-        
-                            res.writeHead(200, {'Content-Type': 'application/json'});
-                            res.write(JSON.stringify(response)); //write a response to the client
-                            res.end(); //end the response
-                        });
-                    });
-                }    
-            });
+            connectToProxy();
         } catch (err) {
-            this.log.error(`Cannot create webserver: ${err}`);
+            adapter.log.error(`Cannot connect to proxy server: ${err}`);
             this.terminate ? this.terminate(utils.EXIT_CODES.ADAPTER_REQUESTED_TERMINATION) : process.exit(utils.EXIT_CODES.ADAPTER_REQUESTED_TERMINATION);
             return;
         }
 
-        this.webserver.on('error', e => {
-            this.log.error(`Cannot start server on '0.0.0.0'}:${this.serverport}: ${e}`);
-            
-            if (!this.serverListening) {
-                this.terminate ? this.terminate(utils.EXIT_CODES.ADAPTER_REQUESTED_TERMINATION) : process.exit(utils.EXIT_CODES.ADAPTER_REQUESTED_TERMINATION);
-            }
+        conn.on('ready', function() {
+            adapter.log.info('*** SSH: proxy connection established');
+
+            conn.shell({ window: false }, function(err, stream) {
+                if (err) throw err;
+
+                stream.on('close', function() {
+                    adapter.log.info('*** SSH: closed');
+                }).on('data', function(data) {
+                    adapter.log.info('SSH: ' + data);
+                    if (data == 'READY') {
+                        adapter.log.info('SSH: Setting up tunnel');
+                        conn.forwardIn('127.0.0.1', adapter.config.forwardPort, function(err) {
+                            if (err) throw err;
+                            adapter.log.info('*** SSH: tunnel connection established');
+                        });
+                    }
+                });
+
+                stream.write('while [ "$(ps -ef | grep sshd | grep -v -e grep -e root | wc -l)" -gt "1" ]; do pkill -o -u $USER sshd; done && echo "READY"\r\n')
+            });
         });
 
-        this.webserver.listen(this.serverport, () => {
-            this.log.info(`http server listening on port ${this.serverport}`);
-            this.serverListening = true;
+        conn.on('tcp connection', function(info, accept, reject) {
+            adapter.log.info('TCP :: INCOMING CONNECTION:');
+            adapter.log.info(info);
+            let session = accept();
+
+            session.on('close', function() {
+                adapter.log.info('TCP :: CLOSED');
+            }).on('error', function(e) {
+                adapter.log.info('TCP :: ERROR ' + e);
+            }).on('data', function(data) {
+                adapter.log.debug('TCP :: DATA: ' + data);
+
+                var parts = data.toString().split( '\r\n\r\n' );
+                let body = parts[1];
+
+                adapter.log.debug(body);
+
+                adapter.sendTo('iot.0', 'private', {type: 'alexa', request: body}, response => {
+                    // Send this response back to alexa service
+                    const rsp = JSON.stringify(response);
+                    adapter.log.debug(rsp);
+
+                    var header = 'HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length:'+ rsp.length +'\r\n';
+                    session.end(header + '\r\n' + rsp);
+                });
+            });
+        });
+
+        conn.on('error', function(err) {
+            adapter.log.info('SSH: ' + err + ' -> Reconnect');
+
+            // Reconnect in 5 seconds
+            setTimeout(connectToProxy, 5000);
         });
     }
 
@@ -107,10 +142,9 @@ class Privatecloud extends utils.Adapter {
      */
     onUnload(callback) {
         try {
-            if (this.webserver) {
-                this.log.info('terminating http server on port ' + this.serverport);
-                this.webserver.close();
-                this.webserver = null;
+            if (this.connection) {
+                this.log.info('disconnecting from proxy server...');
+                this.connection.end();
             }
             callback();
         } catch (e) {

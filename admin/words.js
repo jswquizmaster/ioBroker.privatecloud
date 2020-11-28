@@ -14,16 +14,16 @@ systemDictionary = {
         'pl': 'Ustawienia adaptera dla privatecloud',
         'zh-cn': 'privatecloud的适配器设置'
     },
-    'localPort': {
-        'en': 'local port',
-        'de': 'lokaler Port',
-        'ru': 'local port',
-        'pt': 'local port',
-        'nl': 'local port',
-        'fr': 'local port',
-        'it': 'local port',
-        'es': 'local port',
-        'pl': 'local port',
-        'zh-cn': 'local port'
+    'serverPort': {
+        'en': 'server port',
+        'de': 'server Port',
+        'ru': 'server port',
+        'pt': 'server port',
+        'nl': 'server port',
+        'fr': 'server port',
+        'it': 'server port',
+        'es': 'server port',
+        'pl': 'server port',
+        'zh-cn': 'server port'
     }
 };

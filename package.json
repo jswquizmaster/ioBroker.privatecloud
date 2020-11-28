@@ -19,7 +19,8 @@
     "url": "https://github.com/jswquizmaster/ioBroker.privatecloud"
   },
   "dependencies": {
-    "@iobroker/adapter-core": "^2.4.0"
+    "@iobroker/adapter-core": "^2.4.0",
+    "ssh2": "^0.8.9"
   },
   "devDependencies": {
     "@iobroker/testing": "^2.2.0",
