@@ -96,7 +96,7 @@ class Privatecloud extends utils.Adapter {
                     }
                 });
 
-                stream.write('while [ "$(ps -ef | grep sshd | grep -v -e grep -e root | wc -l)" -gt "1" ]; do pkill -o -u $USER sshd; done && echo "READY"\r\n')
+                stream.write('while [ "$(ps -ef | grep sshd | grep -v -e grep -e root | grep $USER | wc -l)" -gt "1" ]; do pkill -o -u $USER sshd; done && echo "READY"\r\n')
             });
         });
 
