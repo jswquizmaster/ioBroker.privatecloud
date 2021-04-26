@@ -87,7 +87,7 @@ class Privatecloud extends utils.Adapter {
                     adapter.log.info('*** SSH: closed');
                 }).on('data', function(data) {
                     adapter.log.info('SSH: ' + data);
-                    if (data.startsWith('READY')) {
+                    if (data.toString().startsWith('READY')) {
                         adapter.log.info('SSH: Setting up tunnel');
                         conn.forwardIn('127.0.0.1', adapter.config.forwardPort, function(err) {
                             if (err) throw err;
